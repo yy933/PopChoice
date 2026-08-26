@@ -9,7 +9,7 @@
 - [x] **Create Database Table & RPC Functions in Supabase**
   - Create a `movies` table (including `id`, `title`, `release_year`, `content`, and `embedding` fields).
   - Configure vector index and write an RPC function for similarity search (e.g., `match_movies`).
-- [ ] **Environment Variables Configuration (`.env.local`)**
+- [x] **Environment Variables Configuration (`.env.local`)**
   - Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
   - Set `OPENROUTER_API_KEY`.
 
