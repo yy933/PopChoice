@@ -102,20 +102,30 @@ Movie Description: "${movie.content}"
 
 Based on the user's mood/preferences and this movie, explain in an engaging and persuasive tone why this movie is a perfect fit for them. Keep it concise (around 2-3 sentences). `.trim();
 
-  const response = await openai.chat.completions.create({
-    model: CHAT_MODEL,
-    messages: [
-      {
-        role: "system",
-        content: "You are a warm, cinematic movie recommendation agent.",
-      },
-      { role: "user", content: prompt },
-    ],
-    temperature: 0.7,
-  });
+  try {
+    const response = await openai.chat.completions.create({
+      model: CHAT_MODEL,
+      messages: [
+        {
+          role: "system",
+          content: "You are a warm, cinematic movie recommendation agent.",
+        },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.7,
+    });
 
-  const recommendationReason =
-    response.choices[0]?.message?.content || "This movie is perfect for you!";
+    const recommendationReason =
+      response.choices[0]?.message?.content || "This movie is perfect for you!";
 
-  return recommendationReason;
+    return recommendationReason;
+  } catch (error: any) {
+    console.warn(
+      "OpenRouter Chat API Limit/Error. Falling back to default reason:",
+      error.message,
+    );
+
+    // default reason(when reach OpenRouter API limit or error)
+    return `This movie《${movie.title}》(${movie.release_year}) is perfect for you! Highly recommended.`;
+  }
 }

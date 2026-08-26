@@ -31,7 +31,7 @@
 ## Phase 3: Backend API Routes
 > **Core Workflow:** Receive quiz input -> Generate embedding -> Query Supabase for top match -> Generate LLM recommendation reason.
 
-- [ ] **Create `/api/recommend` API Route (Next.js Route Handler)**
+- [x] **Create `/api/recommend` API Route (Next.js Route Handler)**
   1. **Receive Request:** Accept the combined user preference string from the frontend.
   2. **Generate Query Embedding:** Send this string to the Embedding API to get `user_embedding`.
   3. **Vector Search:** Call the Supabase RPC (`match_movies`) to find the Top 1 movie with the highest cosine similarity.
