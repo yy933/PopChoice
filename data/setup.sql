@@ -17,7 +17,7 @@ USING hnsw (embedding vector_cosine_ops);
 
 -- Step 4: Create RPC function (match_movies)
 CREATE OR REPLACE FUNCTION match_movies (
-  query_embedding VECTOR(1536),
+  query_embedding VECTOR(1024),
   match_threshold FLOAT DEFAULT 0.0,
   match_count INT DEFAULT 1
 )
