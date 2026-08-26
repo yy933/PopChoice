@@ -3,7 +3,7 @@ import { openai } from "./openrouter";
 export async function generateEmbedding(text: string): Promise<number[]> {
   try {
     const response = await openai.embeddings.create({
-      model: "nvidia/llama-nemotron-embed-vl-1b-v2:free",
+      model: "liquid/lfm-2.5-embedding-350m:free",
       input: text.replace(/\n/g, " "), // remove unnecessary newlines
     });
 

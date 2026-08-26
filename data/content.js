@@ -1,5 +1,5 @@
 // Movies info
-export default [
+export const movies = [
   {
     title: "Avatar: The Way of the Water",
     releaseYear: "2022",

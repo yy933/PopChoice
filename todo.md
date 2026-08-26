@@ -3,10 +3,10 @@
 ## Phase 1: Setup & Infrastructure
 - [x] **Create Next.js Project**
   - Use App Router + TypeScript + Tailwind CSS (`npx create-next-app@latest`).
-- [ ] **Supabase Setup & Enable Vector Extension**
+- [x] **Supabase Setup & Enable Vector Extension**
   - Create a new project in the Supabase dashboard.
   - Run `CREATE EXTENSION IF NOT EXISTS vector;` in the SQL Editor to enable vector support.
-- [ ] **Create Database Table & RPC Functions in Supabase**
+- [x] **Create Database Table & RPC Functions in Supabase**
   - Create a `movies` table (including `id`, `title`, `release_year`, `content`, and `embedding` fields).
   - Configure vector index and write an RPC function for similarity search (e.g., `match_movies`).
 - [ ] **Environment Variables Configuration (`.env.local`)**
