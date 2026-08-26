@@ -7,9 +7,13 @@ export async function generateEmbedding(text: string): Promise<number[]> {
       input: text.replace(/\n/g, " "), // remove unnecessary newlines
     });
 
-    return response.data[0].embedding;
+    const embedding = response.data[0].embedding;
+    if (typeof embedding === "string") {
+      return JSON.parse(embedding);
+    }
+    return embedding as number[];
   } catch (error) {
-    console.error("Error generating embedding:", error);
+    console.error("OpenRouter Embedding API Error Details:", error);
     throw new Error("Failed to generate embedding");
   }
 }

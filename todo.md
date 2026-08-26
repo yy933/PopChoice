@@ -18,9 +18,9 @@
 ## Phase 2: Data Ingestion & Embedding
 > **Core Concept:** Convert the movie data from `content.js` into embeddings and store them in Supabase.
 
-- [ ] **Choose an Embedding Model**
+- [x] **Choose an Embedding Model**
   - Recommended: Use a free embedding model via OpenRouter or HuggingFace (e.g., `text-embedding-3-small` or an open-source embedding API / HuggingFace Inference API).
-- [ ] **Write Data Ingestion Script**
+- [x] **Write Data Ingestion Script**
   - Read the movie array from `content.js`.
   - Iterate through each movie and combine `title` + `release_year` + `content` into a single text block.
   - Call the Embedding API to obtain the vector array for each text block.
