@@ -4,6 +4,7 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import Question from "@/components/Question";
 import Button from "@/components/Button";
+import LoadingUI from "@/components/LoadingUI";
 
 interface RecommendResponse {
   recommendation: string;
@@ -63,7 +64,7 @@ export default function Home() {
     <main className="min-h-screen bg-[#030d2e] flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md bg-[#030d2e] p-6 rounded-xl flex flex-col items-center">
         {/* Header Title with Logo */}
-        <Header />
+        <Header logo="🍿" title="PopChoice" />
 
         {/* Status 1: Questions View */}
         {status === "quiz" && (
@@ -94,21 +95,16 @@ export default function Home() {
             >
               Do you wanna have fun or do you want something serious?
             </Question>
-            <Button type="submit" className="mt-3"> Let's Go</Button>
+            <Button type="submit" className="mt-3">
+              {" "}
+              Let's Go
+            </Button>
           </form>
         )}
 
         {/* Status 2: Loading View */}
         {status === "loading" && (
-          <div className="flex flex-col items-center justify-center my-12 gap-4">
-            <div className="w-12 h-12 border-4 border-[#37ec80] border-t-transparent rounded-full animate-spin"></div>
-            <p
-              className="text-white text-center text-lg mt-2"
-              style={{ fontFamily: "var(--font-roboto-slab), serif" }}
-            >
-              Searching the movie database for you...
-            </p>
-          </div>
+          <LoadingUI>Searching the movie database for you...</LoadingUI>
         )}
 
         {/* Status 3: Movie Output View */}
@@ -120,7 +116,10 @@ export default function Home() {
             >
               {result.recommendation}
             </p>
-            <Button onClick={handleReset} className="mt-4"> Go Again</Button>
+            <Button onClick={handleReset} className="mt-4">
+              {" "}
+              Go Again
+            </Button>
           </div>
         )}
       </div>

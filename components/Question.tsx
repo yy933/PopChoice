@@ -1,11 +1,17 @@
-interface QuestionProps {
+type QuestionProps = {
   children: React.ReactNode;
   rows?: number;
   value: string;
   onChange: React.ChangeEventHandler<HTMLTextAreaElement>;
   placeholder?: string;
-}
-export default function Question({children, rows, value, onChange, placeholder}: QuestionProps){
+};
+export default function Question({
+  children,
+  rows,
+  value,
+  onChange,
+  placeholder,
+}: QuestionProps) {
   return (
     <div>
       <label className="block text-white text-sm mb-2 font-medium">

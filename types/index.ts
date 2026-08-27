@@ -1,4 +1,4 @@
-export interface MatchedMovie {
+export type MatchedMovie = {
   id: number;
   title: string;
   release_year: number;
@@ -6,7 +6,7 @@ export interface MatchedMovie {
   similarity: number;
 }
 
-export interface Movie {
+export type Movie = {
   id: number;
   title: string;
   releaseYear: number | string;
