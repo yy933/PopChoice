@@ -17,21 +17,24 @@ interface RecommendResponse {
 }
 
 export default function Home() {
-  // 問卷欄位 State
+  // Form input State
   const [favoriteMovie, setFavoriteMovie] = useState("");
   const [eraPreference, setEraPreference] = useState("");
   const [moodPreference, setMoodPreference] = useState("");
 
-  // UI 狀態：'quiz' | 'loading' | 'result'
+  // UI state：'quiz' | 'loading' | 'result'
   const [status, setStatus] = useState<"quiz" | "loading" | "result">("quiz");
   const [result, setResult] = useState<RecommendResponse | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (formData: FormData) => {
     setStatus("loading");
 
-    // 整合問卷回答為單一 Prompt 字串
-    const userInput = `My favorite movie is "${favoriteMovie}". Era preference: "${eraPreference}". Mood preference: "${moodPreference}".`;
+    const fav = formData.get("favoriteMovie") as string;
+    const era = formData.get("eraPreference") as string;
+    const mood = formData.get("moodPreference") as string;
+
+    // merge user input as a single prompt
+    const userInput = `My favorite movie is "${fav}". Era preference: "${era}". Mood preference: "${mood}".`;
 
     try {
       const res = await fetch("/api/recommend", {
@@ -68,8 +71,9 @@ export default function Home() {
 
         {/* Status 1: Questions View */}
         {status === "quiz" && (
-          <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5">
+          <form action={handleSubmit} className="w-full flex flex-col gap-5">
             <Question
+              name="favoriteMovie"
               rows={3}
               value={favoriteMovie}
               onChange={(e) => setFavoriteMovie(e.target.value)}
@@ -79,6 +83,7 @@ export default function Home() {
             </Question>
 
             <Question
+              name="eraPreference"
               rows={2}
               value={eraPreference}
               onChange={(e) => setEraPreference(e.target.value)}
@@ -88,6 +93,7 @@ export default function Home() {
             </Question>
 
             <Question
+              name="moodPreference"
               rows={2}
               value={moodPreference}
               onChange={(e) => setMoodPreference(e.target.value)}
@@ -117,7 +123,6 @@ export default function Home() {
               {result.recommendation}
             </p>
             <Button onClick={handleReset} className="mt-4">
-              {" "}
               Go Again
             </Button>
           </div>

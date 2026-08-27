@@ -1,5 +1,6 @@
 type QuestionProps = {
   children: React.ReactNode;
+  name:string;
   rows?: number;
   value: string;
   onChange: React.ChangeEventHandler<HTMLTextAreaElement>;
@@ -7,6 +8,7 @@ type QuestionProps = {
 };
 export default function Question({
   children,
+  name,
   rows,
   value,
   onChange,
@@ -19,6 +21,7 @@ export default function Question({
       </label>
       <textarea
         required
+        name={name}
         rows={rows}
         value={value}
         onChange={onChange}
