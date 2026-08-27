@@ -45,3 +45,42 @@ BEGIN
   LIMIT match_count;
 END;
 $$;
+
+
+-- For Gemini API (gemini-embedding-001 embedding model)
+-- 1. Delete RPC function
+drop function if exists match_movies;
+
+-- 2. Clear old embeddings (Set embedding column to null)
+update movies set embedding = null;
+
+-- 3. Alter movies table (change embedding type to vector(768))
+alter table movies 
+alter column embedding type vector(768);
+
+-- 4. Recreate RPC function
+create or replace function match_movies (
+  query_embedding vector(768),
+  match_threshold float,
+  match_count int
+)
+returns table (
+  id bigint,
+  title text,
+  content text,
+  release_year int,
+  similarity float
+)
+language sql stable
+as $$
+  select
+    movies.id,
+    movies.title,
+    movies.content,
+    movies.release_year,
+    (1 - (movies.embedding <=> query_embedding))::float as similarity
+  from movies
+  where 1 - (movies.embedding <=> query_embedding) > match_threshold
+  order by similarity desc
+  limit match_count;
+$$;
