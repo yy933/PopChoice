@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Header from "@/components/Header";
 import Question from "@/components/Question";
+import Button from "@/components/Button";
 
 interface RecommendResponse {
   recommendation: string;
@@ -93,14 +94,7 @@ export default function Home() {
             >
               Do you wanna have fun or do you want something serious?
             </Question>
-
-            <button
-              type="submit"
-              className="mt-3 w-full bg-[#37ec80] hover:bg-[#2bd671] text-[#030d2e] font-bold py-3 rounded-xl transition duration-200 text-xl"
-              style={{ fontFamily: "var(--font-carter), cursive" }}
-            >
-              Let's Go
-            </button>
+            <Button> Let's Go</Button>
           </form>
         )}
 
