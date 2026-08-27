@@ -94,7 +94,7 @@ export default function Home() {
             >
               Do you wanna have fun or do you want something serious?
             </Question>
-            <Button> Let's Go</Button>
+            <Button type="submit" className="mt-3"> Let's Go</Button>
           </form>
         )}
 
@@ -120,14 +120,7 @@ export default function Home() {
             >
               {result.recommendation}
             </p>
-
-            <button
-              onClick={handleReset}
-              className="w-full bg-[#37ec80] hover:bg-[#2bd671] text-[#030d2e] font-bold py-3 rounded-xl transition duration-200 text-xl mt-4"
-              style={{ fontFamily: "var(--font-carter), cursive" }}
-            >
-              Go Again
-            </button>
+            <Button onClick={handleReset} className="mt-4"> Go Again</Button>
           </div>
         )}
       </div>
