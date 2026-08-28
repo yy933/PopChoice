@@ -6,7 +6,7 @@ import Question from "@/components/Question";
 import Button from "@/components/Button";
 import LoadingUI from "@/components/LoadingUI";
 
-interface RecommendResponse {
+type RecommendResponse = {
   recommendation: string;
   candidateMovies?: Array<{
     id: number;
@@ -17,11 +17,7 @@ interface RecommendResponse {
 }
 
 export default function Home() {
-  // Form input State
-  const [favoriteMovie, setFavoriteMovie] = useState("");
-  const [eraPreference, setEraPreference] = useState("");
-  const [moodPreference, setMoodPreference] = useState("");
-
+ 
   // UI state：'quiz' | 'loading' | 'result'
   const [status, setStatus] = useState<"quiz" | "loading" | "result">("quiz");
   const [result, setResult] = useState<RecommendResponse | null>(null);
@@ -46,7 +42,28 @@ export default function Home() {
       if (!res.ok) throw new Error("API Request failed");
 
       const data: RecommendResponse = await res.json();
+      // {
+      //       recommendation: {
+      //         movie: {
+      //           id: topMovie.id,
+      //           title: topMovie.title,
+      //           releaseYear: topMovie.release_year,
+      //           content: topMovie.content,
+      //           similarity: topMovie.similarity,
+      //         },
+      //         reason: recommendationReason,
+      //       },
+      //       // return 2 other candidates
+      //       candidateMovies: movies.slice(1).map(
+      //         (movie: MatchedMovie): Movie => ({
+      //           id: movie.id,
+      //           title: movie.title,
+      //           releaseYear: movie.release_year,
+      //           content: movie.content,
+      //           similarity: movie.similarity,
+      //         }
       setResult(data);
+      console.log(data)
       setStatus("result");
     } catch (err) {
       console.error(err);
@@ -56,9 +73,6 @@ export default function Home() {
   };
 
   const handleReset = () => {
-    setFavoriteMovie("");
-    setEraPreference("");
-    setMoodPreference("");
     setResult(null);
     setStatus("quiz");
   };
@@ -75,8 +89,6 @@ export default function Home() {
             <Question
               name="favoriteMovie"
               rows={3}
-              value={favoriteMovie}
-              onChange={(e) => setFavoriteMovie(e.target.value)}
               placeholder="The Shawshank Redemption&#10;Because it taught me to never give up hope no matter how hard life gets"
             >
               What's your favorite movie?
@@ -85,8 +97,6 @@ export default function Home() {
             <Question
               name="eraPreference"
               rows={2}
-              value={eraPreference}
-              onChange={(e) => setEraPreference(e.target.value)}
               placeholder="I want to watch movies that were released after 1990"
             >
               Are you in the mood for something new or a classic?
@@ -95,14 +105,11 @@ export default function Home() {
             <Question
               name="moodPreference"
               rows={2}
-              value={moodPreference}
-              onChange={(e) => setMoodPreference(e.target.value)}
               placeholder="I want to watch something stupid and fun"
             >
               Do you wanna have fun or do you want something serious?
             </Question>
             <Button type="submit" className="mt-3">
-              {" "}
               Let's Go
             </Button>
           </form>
@@ -120,7 +127,7 @@ export default function Home() {
               className="text-white text-sm leading-relaxed mb-6 px-2 text-left"
               style={{ fontFamily: "var(--font-roboto-slab), serif" }}
             >
-              {result.recommendation}
+              {/* {result.recommendation.movie.content} */}
             </p>
             <Button onClick={handleReset} className="mt-4">
               Go Again
