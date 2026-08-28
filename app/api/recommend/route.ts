@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { generateEmbedding } from "@/lib/embeddings";
 import { supabase } from "@/lib/supabase";
-import { openai } from "@/lib/openrouter";
+// import { openai } from "@/lib/openrouter";
 import type { Movie, MatchedMovie } from "@/types";
+import { GoogleGenAI, Type } from "@google/genai";
 
-const CHAT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
+const ai = new GoogleGenAI();
+// const CHAT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
 
 export async function POST(req: Request) {
   try {
@@ -35,7 +37,18 @@ export async function POST(req: Request) {
 
     // 4. LLM Reason Generation via OpenRouter
     const topMovie = movies[0];
-    const recommendationReason = await chat({ userInput, movie: topMovie });
+    const { isRelevant, reason } = await chat({ userInput, movie: topMovie });
+
+    if (!isRelevant) {
+      return NextResponse.json(
+        {
+          error: "Irrelevant input.",
+          message:
+            "Your input does not seem related to movie preferences. Please share what kind of movies or vibe you enjoy!",
+        },
+        { status: 400 },
+      );
+    }
 
     // 5. Return response
     return NextResponse.json({
@@ -47,7 +60,7 @@ export async function POST(req: Request) {
           content: topMovie.content,
           similarity: topMovie.similarity,
         },
-        reason: recommendationReason,
+        reason: reason,
       },
       // return 2 other candidates
       candidateMovies: movies.slice(1).map(
@@ -94,38 +107,59 @@ async function chat({
 }: {
   userInput: string;
   movie: MatchedMovie;
-}) {
-  // 4. LLM Reason Generation via OpenRouter
+}): Promise<{ isRelevant: boolean; reason: string }> {
+  // 4. LLM Reason Generation
   const prompt = `User Mood/Preference: "${userInput}"
 Movie Title: "${movie.title}" (${movie.release_year})
-Movie Description: "${movie.content}"
-
-Based on the user's mood/preferences and this movie, explain in an engaging and persuasive tone why this movie is a perfect fit for them. Keep it concise (around 2-3 sentences). `.trim();
+Movie Description: "${movie.content}"`.trim();
 
   try {
-    const response = await openai.chat.completions.create({
-      model: CHAT_MODEL,
-      messages: [
-        {
-          role: "system",
-          content: "You are a warm, cinematic movie recommendation agent.",
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash-lite",
+      contents: prompt,
+      config: {
+        systemInstruction: `You are a film recommendation validator and cinematic agent.
+Your task is to analyze if the user's input expresses movie preferences, viewing tastes, favorite films, or a desired mood/genre.
+
+If isRelevant is true, explain in 2-3 engaging sentences why the candidate movie fits their vibe. If false, set reason to an empty string.`,
+        temperature: 0.2,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            isRelevant: {
+              type: Type.BOOLEAN,
+              description:
+                "True if user input is related to movies, tastes, or entertainment moods. False if off-topic.",
+            },
+            reason: {
+              type: Type.STRING,
+              description:
+                "The engaging recommendation reason if relevant, or empty string if irrelevant.",
+            },
+          },
+          required: ["isRelevant", "reason"],
         },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.7,
+      },
     });
 
-    const recommendationReason =
-      response.choices[0]?.message?.content || "This movie is perfect for you!";
+    const jsonText = response.text || "{}";
+    const parsed = JSON.parse(jsonText);
 
-    return recommendationReason;
+    return {
+      isRelevant: Boolean(parsed.isRelevant),
+      reason:
+        parsed.reason ||
+        `This movie 《${movie.title}》 (${movie.release_year}) is highly recommended for you!`,
+    };
   } catch (error: any) {
-    console.warn(
-      "OpenRouter Chat API Limit/Error. Falling back to default reason:",
-      error.message,
-    );
+    console.warn("Gemini API Error or JSON Parse error:", error.message);
+    console.error("Full Error:", error);
 
-    // default reason(when reach OpenRouter API limit or error)
-    return `This movie《${movie.title}》(${movie.release_year}) is perfect for you! Highly recommended.`;
+    // default reason(when reach API limit or error)
+    return {
+      isRelevant: true,
+      reason: `This movie 《${movie.title}》 (${movie.release_year}) is perfect for you!`,
+    };
   }
 }
