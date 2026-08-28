@@ -118,10 +118,14 @@ Movie Description: "${movie.content}"`.trim();
       model: "gemini-3.5-flash-lite",
       contents: prompt,
       config: {
-        systemInstruction: `You are a film recommendation validator and cinematic agent.
-Your task is to analyze if the user's input expresses movie preferences, viewing tastes, favorite films, or a desired mood/genre.
+        systemInstruction: `You are a strict film recommendation validator.
+Determine if the user's input expresses explicit movie preferences, viewing tastes, or entertainment moods.
 
-If isRelevant is true, explain in 2-3 engaging sentences why the candidate movie fits their vibe. If false, set reason to an empty string.`,
+CRITICAL RULE:
+If the input discusses unrelated topics (e.g., food, weather, coding, sports, non-movie trivia, random chit-chat), set isRelevant to FALSE.
+Only set isRelevant to TRUE if the input relates to films, genres, cinematic themes, or desired viewing moods.
+
+If isRelevant is true, provide 2-3 engaging sentences why the candidate movie fits their vibe. If false, set reason to empty string.`,
         temperature: 0.2,
         responseMimeType: "application/json",
         responseSchema: {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, startTransition } from "react";
+import { useState, useActionState, startTransition } from "react";
 import Header from "@/components/Header";
 import Question from "@/components/Question";
 import Button from "@/components/Button";
@@ -14,17 +14,24 @@ type RecommendResponse = {
 };
 
 export default function Home() {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const [result, formAction, isPending] = useActionState(
     async (
       previousState: RecommendResponse | null,
       payload: FormData | "RESET",
     ) => {
-      if (payload === "RESET") return null;
+      if (payload === "RESET") {
+        setErrorMessage(null);
+        return null;
+      }
+
+      setErrorMessage(null);
+
       const fav = payload.get("favoriteMovie") as string;
       const era = payload.get("eraPreference") as string;
       const mood = payload.get("moodPreference") as string;
 
-      // merge user input as a single prompt
       const userInput = `My favorite movie is "${fav}". Era preference: "${era}". Mood preference: "${mood}".`;
 
       try {
@@ -34,17 +41,29 @@ export default function Home() {
           body: JSON.stringify({ userInput }),
         });
 
-        if (!res.ok) throw new Error("API Request failed");
+        const data = await res.json();
 
-        return await res.json();
+        if (!res.ok) {
+          setErrorMessage(
+            data.message ||
+              data.error ||
+              "Something went wrong. Please try again.",
+          );
+          return null;
+        }
+
+        return data as RecommendResponse;
       } catch (err) {
         console.error(err);
-        alert("Something went wrong while fetching movie recommendations.");
+        setErrorMessage(
+          "Network error or server is unreachable. Please try again later.",
+        );
         return null;
       }
     },
     null,
   );
+
   const handleReset = () => {
     startTransition(() => {
       formAction("RESET");
@@ -63,6 +82,11 @@ export default function Home() {
         {/* Status 1: Questions View */}
         {!isPending && !result && (
           <form action={formAction} className="w-full flex flex-col gap-5">
+            {errorMessage && (
+              <div className="bg-red-500/10 border border-red-500/50 text-red-300 text-sm p-3 rounded-lg text-center">
+                {errorMessage}
+              </div>
+            )}
             <Question
               name="favoriteMovie"
               rows={3}
