@@ -15,7 +15,7 @@ export default function Button({
   return (
     <button
       className={cn(
-        "w-full bg-[#37ec80] hover:bg-[#2bd671] text-[#030d2e] font-bold py-3 rounded-xl transition duration-200 text-xl font-[family-name:var(--font-carter)]",
+        "w-full bg-[#37ec80] hover:bg-[#2bd671] text-[#030d2e] font-bold py-3 rounded-xl transition duration-200 text-xl cursor-pointer font-[family-name:var(--font-carter)]",
         className,
       )}
       {...props}

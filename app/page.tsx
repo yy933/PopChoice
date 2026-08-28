@@ -101,6 +101,12 @@ export default function Home() {
         {/* Status 3: Movie Output View */}
         {status === "result" && result && (
           <div className="w-full flex flex-col items-center text-center mt-2">
+            <h2
+              className="text-white text-3xl font-semibold mb-6"
+              style={{ fontFamily: "var(--font-roboto-slab), serif" }}
+            >
+              {result.recommendation.movie.title}  ({result.recommendation.movie.releaseYear})
+            </h2>
             <p
               className="text-white text-sm leading-relaxed mb-6 px-2 text-left"
               style={{ fontFamily: "var(--font-roboto-slab), serif" }}
