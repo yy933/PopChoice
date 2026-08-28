@@ -2,6 +2,10 @@ import { supabase } from "@/lib/supabase";
 import { ai } from "@/lib/gemini";
 import type { MatchedMovie } from "@/types";
 import { Type } from "@google/genai";
+import {
+  MOVIE_RECOMMENDER_SYSTEM_INSTRUCTION,
+  buildMoviePrompt,
+} from "@/lib/prompts";
 
 export const LOW_MATCH_THRESHOLD = 0.35;
 
@@ -34,27 +38,14 @@ export async function validateAndGenerateReason({
   movie: MatchedMovie;
   isLowMatch: boolean;
 }): Promise<{ isRelevant: boolean; reason: string }> {
-  const prompt = `User Mood/Preference: "${userInput}"
-Movie Title: "${movie.title}" (${movie.release_year})
-Movie Description: "${movie.content}"
-Match Quality Status: ${isLowMatch ? "LOW_MATCH (No perfect match found in library)" : "HIGH_MATCH"}`.trim();
+  const prompt = buildMoviePrompt({ userInput, movie, isLowMatch });
 
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash-lite",
       contents: prompt,
       config: {
-        systemInstruction: `You are a strict film recommendation validator.
-Determine if the user's input expresses explicit movie preferences, viewing tastes, or entertainment moods.
-
-CRITICAL RULE:
-If the input discusses unrelated topics (e.g., food, weather, coding, sports, non-movie trivia, random chit-chat), set isRelevant to FALSE.
-Only set isRelevant to TRUE if the input relates to films, genres, cinematic themes, or desired viewing moods.
-
-If isRelevant=true, generate a 2-3 sentence recommendation reason:
-   - If Match Quality Status is HIGH_MATCH: Explain convincingly why this movie fits their preference.
-   - If Match Quality Status is LOW_MATCH: Politely mention that while our collection doesn't have an exact match for their request, this movie is the closest fit and highlight what elements they might still enjoy. 
-If isRelevant=false, set reason to empty string.`,
+        systemInstruction: MOVIE_RECOMMENDER_SYSTEM_INSTRUCTION,
         temperature: 0.2,
         responseMimeType: "application/json",
         responseSchema: {
