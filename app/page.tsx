@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, startTransition } from "react";
 import Header from "@/components/Header";
 import Question from "@/components/Question";
 import Button from "@/components/Button";
@@ -15,10 +15,14 @@ type RecommendResponse = {
 
 export default function Home() {
   const [result, formAction, isPending] = useActionState(
-    async (previousState: RecommendResponse | null, formData: FormData) => {
-      const fav = formData.get("favoriteMovie") as string;
-      const era = formData.get("eraPreference") as string;
-      const mood = formData.get("moodPreference") as string;
+    async (
+      previousState: RecommendResponse | null,
+      payload: FormData | "RESET",
+    ) => {
+      if (payload === "RESET") return null;
+      const fav = payload.get("favoriteMovie") as string;
+      const era = payload.get("eraPreference") as string;
+      const mood = payload.get("moodPreference") as string;
 
       // merge user input as a single prompt
       const userInput = `My favorite movie is "${fav}". Era preference: "${era}". Mood preference: "${mood}".`;
@@ -41,6 +45,11 @@ export default function Home() {
     },
     null,
   );
+  const handleReset = () => {
+    startTransition(() => {
+      formAction("RESET");
+    });
+  };
 
   return (
     <main className="min-h-screen bg-[#030d2e] flex flex-col items-center justify-center p-4">
@@ -99,7 +108,7 @@ export default function Home() {
             >
               {result.recommendation.reason}
             </p>
-            <Button onClick={() => window.location.reload()} className="mt-4">
+            <Button onClick={handleReset} className="mt-4">
               Go Again
             </Button>
           </div>
