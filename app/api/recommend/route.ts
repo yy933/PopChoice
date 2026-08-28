@@ -6,6 +6,7 @@ import type { Movie, MatchedMovie } from "@/types";
 import { GoogleGenAI, Type } from "@google/genai";
 
 const ai = new GoogleGenAI();
+const LOW_MATCH_THRESHOLD = 0.35
 // const CHAT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
 
 export async function POST(req: Request) {
@@ -37,7 +38,9 @@ export async function POST(req: Request) {
 
     // 4. LLM Reason Generation via OpenRouter
     const topMovie = movies[0];
-    const { isRelevant, reason } = await chat({ userInput, movie: topMovie });
+    const isLowMatch = topMovie.similarity < LOW_MATCH_THRESHOLD;
+   
+    const { isRelevant, reason } = await chat({ userInput, movie: topMovie, isLowMatch });
 
     if (!isRelevant) {
       return NextResponse.json(
@@ -61,6 +64,7 @@ export async function POST(req: Request) {
           similarity: topMovie.similarity,
         },
         reason: reason,
+        isLowMatch,
       },
       // return 2 other candidates
       candidateMovies: movies.slice(1).map(
@@ -104,14 +108,17 @@ async function vectorSearch(embedding: number[]): Promise<MatchedMovie[]> {
 async function chat({
   userInput,
   movie,
+  isLowMatch
 }: {
   userInput: string;
   movie: MatchedMovie;
+  isLowMatch: boolean
 }): Promise<{ isRelevant: boolean; reason: string }> {
   // 4. LLM Reason Generation
   const prompt = `User Mood/Preference: "${userInput}"
 Movie Title: "${movie.title}" (${movie.release_year})
-Movie Description: "${movie.content}"`.trim();
+Movie Description: "${movie.content}"
+Match Quality Status: ${isLowMatch ? "LOW_MATCH (No perfect match found in library)" : "HIGH_MATCH"}`.trim();
 
   try {
     const response = await ai.models.generateContent({
@@ -125,7 +132,10 @@ CRITICAL RULE:
 If the input discusses unrelated topics (e.g., food, weather, coding, sports, non-movie trivia, random chit-chat), set isRelevant to FALSE.
 Only set isRelevant to TRUE if the input relates to films, genres, cinematic themes, or desired viewing moods.
 
-If isRelevant is true, provide 2-3 engaging sentences why the candidate movie fits their vibe. If false, set reason to empty string.`,
+If isRelevant=true, generate a 2-3 sentence recommendation reason:
+   - If Match Quality Status is HIGH_MATCH: Explain convincingly why this movie fits their preference.
+   - If Match Quality Status is LOW_MATCH: Politely mention that while our collection doesn't have an exact match for their request, this movie is the closest fit and highlight what elements they might still enjoy. 
+If isRelevant=false, set reason to empty string.`,
         temperature: 0.2,
         responseMimeType: "application/json",
         responseSchema: {

@@ -7,7 +7,7 @@ import Button from "@/components/Button";
 import LoadingUI from "@/components/LoadingUI";
 import type { Movie } from "@/types";
 
-type Recommendation = { movie: Movie; reason: string };
+type Recommendation = { movie: Movie; reason: string, isLowMatch?: boolean};
 type RecommendResponse = {
   recommendation: Recommendation;
   candidateMovies?: Movie[];
