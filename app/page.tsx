@@ -5,19 +5,16 @@ import Header from "@/components/Header";
 import Question from "@/components/Question";
 import Button from "@/components/Button";
 import LoadingUI from "@/components/LoadingUI";
+import type { Movie } from "@/types";
 
+type Recommendation = { movie: Movie; reason: string };
 type RecommendResponse = {
-  recommendation: string;
-  candidateMovies?: Array<{
-    id: number;
-    title: string;
-    release_year: number;
-    content: string;
-  }>;
-}
+  recommendation: Recommendation;
+  candidateMovies?: Movie[];
+};
+
 
 export default function Home() {
- 
   // UI state：'quiz' | 'loading' | 'result'
   const [status, setStatus] = useState<"quiz" | "loading" | "result">("quiz");
   const [result, setResult] = useState<RecommendResponse | null>(null);
@@ -42,28 +39,9 @@ export default function Home() {
       if (!res.ok) throw new Error("API Request failed");
 
       const data: RecommendResponse = await res.json();
-      // {
-      //       recommendation: {
-      //         movie: {
-      //           id: topMovie.id,
-      //           title: topMovie.title,
-      //           releaseYear: topMovie.release_year,
-      //           content: topMovie.content,
-      //           similarity: topMovie.similarity,
-      //         },
-      //         reason: recommendationReason,
-      //       },
-      //       // return 2 other candidates
-      //       candidateMovies: movies.slice(1).map(
-      //         (movie: MatchedMovie): Movie => ({
-      //           id: movie.id,
-      //           title: movie.title,
-      //           releaseYear: movie.release_year,
-      //           content: movie.content,
-      //           similarity: movie.similarity,
-      //         }
+     
       setResult(data);
-      console.log(data)
+      console.log(data);
       setStatus("result");
     } catch (err) {
       console.error(err);
@@ -127,7 +105,7 @@ export default function Home() {
               className="text-white text-sm leading-relaxed mb-6 px-2 text-left"
               style={{ fontFamily: "var(--font-roboto-slab), serif" }}
             >
-              {/* {result.recommendation.movie.content} */}
+              {result.recommendation.reason}
             </p>
             <Button onClick={handleReset} className="mt-4">
               Go Again
