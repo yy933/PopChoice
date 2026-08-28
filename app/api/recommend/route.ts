@@ -1,4 +1,3 @@
-// app/api/recommend/route.ts
 import { NextResponse } from "next/server";
 import { generateEmbedding } from "@/lib/embeddings";
 import {

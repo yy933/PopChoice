@@ -13,3 +13,14 @@ export type Movie = {
   content: string;
   similarity?: number;
 }
+
+export interface LLMReasonParams {
+  userInput: string;
+  movie: MatchedMovie;
+  isLowMatch: boolean;
+}
+
+export interface LLMReasonResponse {
+  isRelevant: boolean;
+  reason: string;
+}

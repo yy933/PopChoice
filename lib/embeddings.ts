@@ -1,4 +1,4 @@
-import { ai } from "@/lib/gemini";
+import { ai } from "@/lib/gemini-client";
 
 export async function generateEmbedding(text: string): Promise<number[]> {
   try {
