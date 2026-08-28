@@ -1,7 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
-
-// Instantiate SDK (Read process.env.GEMINI_API_KEY automatically)
-const ai = new GoogleGenAI();
+import { ai } from "@/lib/gemini";
 
 export async function generateEmbedding(text: string): Promise<number[]> {
   try {
@@ -10,7 +7,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
       contents: text,
       // Optional: Set the output dimensionality
       config: {
-        outputDimensionality: 768, 
+        outputDimensionality: 768,
       },
     });
 

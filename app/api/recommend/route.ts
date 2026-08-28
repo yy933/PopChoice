@@ -3,10 +3,10 @@ import { generateEmbedding } from "@/lib/embeddings";
 import { supabase } from "@/lib/supabase";
 // import { openai } from "@/lib/openrouter";
 import type { Movie, MatchedMovie } from "@/types";
-import { GoogleGenAI, Type } from "@google/genai";
+import { Type } from "@google/genai";
+import { ai } from "@/lib/gemini";
 
-const ai = new GoogleGenAI();
-const LOW_MATCH_THRESHOLD = 0.35
+const LOW_MATCH_THRESHOLD = 0.35;
 // const CHAT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
 
 export async function POST(req: Request) {
@@ -39,8 +39,12 @@ export async function POST(req: Request) {
     // 4. LLM Reason Generation via OpenRouter
     const topMovie = movies[0];
     const isLowMatch = topMovie.similarity < LOW_MATCH_THRESHOLD;
-   
-    const { isRelevant, reason } = await chat({ userInput, movie: topMovie, isLowMatch });
+
+    const { isRelevant, reason } = await chat({
+      userInput,
+      movie: topMovie,
+      isLowMatch,
+    });
 
     if (!isRelevant) {
       return NextResponse.json(
@@ -108,11 +112,11 @@ async function vectorSearch(embedding: number[]): Promise<MatchedMovie[]> {
 async function chat({
   userInput,
   movie,
-  isLowMatch
+  isLowMatch,
 }: {
   userInput: string;
   movie: MatchedMovie;
-  isLowMatch: boolean
+  isLowMatch: boolean;
 }): Promise<{ isRelevant: boolean; reason: string }> {
   // 4. LLM Reason Generation
   const prompt = `User Mood/Preference: "${userInput}"
