@@ -1,12 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { generateRecommendationReason } from "@/lib/llm";
-import { ai } from "@/lib/gemini-client";
 import type { MatchedMovie } from "@/types";
-import { Type } from "@google/genai";
-import {
-  MOVIE_RECOMMENDER_SYSTEM_INSTRUCTION,
-  buildMoviePrompt,
-} from "@/lib/prompts";
+
 
 export const LOW_MATCH_THRESHOLD = 0.35;
 
