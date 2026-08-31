@@ -30,6 +30,10 @@ const INITIAL_STATE: FormState = {
   currentCandidateIndex: 0,
 };
 
+// helper for parsing form data
+const parseField = (formData: FormData, key: string, defaultValue = "") =>
+  (formData.get(key) as string) || defaultValue;
+
 export default function Home() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -48,8 +52,8 @@ export default function Home() {
 
       // View 1: handle group config (CONFIG -> QUESTIONS)
       if (previousState.view === "CONFIG") {
-        const countRaw = payload.get("peopleCount") as string;
-        const timeLimit = (payload.get("timeLimit") as string) || "Unlimited";
+        const countRaw = parseField(payload, "peopleCount");
+        const timeLimit = parseField(payload, "timeLimit", "Unlimited");
         const peopleCount = parseInt(countRaw, 10) || 1;
 
         return {
@@ -64,10 +68,10 @@ export default function Home() {
       // View 2: Handle individual answer (QUESTIONS)
       if (previousState.view === "QUESTIONS") {
         const currentAnswer: PersonAnswer = {
-          favoriteMovie: (payload.get("favoriteMovie") as string) || "",
-          eraPreference: (payload.get("eraPreference") as string) || "",
-          moodPreference: (payload.get("moodPreference") as string) || "",
-          strandedActor: (payload.get("strandedActor") as string) || "",
+          favoriteMovie: parseField(payload, "favoriteMovie"),
+          eraPreference: parseField(payload, "eraPreference"),
+          moodPreference: parseField(payload, "moodPreference"),
+          strandedActor: parseField(payload, "strandedActor"),
         };
 
         const updatedAnswers = [...previousState.answers, currentAnswer];
