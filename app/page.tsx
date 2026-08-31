@@ -5,12 +5,30 @@ import Header from "@/components/Header";
 import Question from "@/components/Question";
 import Button from "@/components/Button";
 import LoadingUI from "@/components/LoadingUI";
-import type { Movie } from "@/types";
+import type { Movie, PersonAnswer, GroupConfig, ViewState } from "@/types";
+import { config } from "process";
 
-type Recommendation = { movie: Movie; reason: string, isLowMatch?: boolean};
+type Recommendation = { movie: Movie; reason: string; isLowMatch?: boolean };
 type RecommendResponse = {
   recommendation: Recommendation;
   candidateMovies?: Movie[];
+};
+type FormState = {
+  view: ViewState;
+  config: GroupConfig;
+  currentPersonIndex: number;
+  answers: PersonAnswer[];
+  result: RecommendResponse | null;
+  currentCandidateIndex: number; // control switching of "Next Movie"
+};
+
+const INITIAL_STATE: FormState = {
+  view: "CONFIG",
+  config: { peopleCount: 1, timeLimit: "" },
+  currentPersonIndex: 0,
+  answers: [],
+  result: null,
+  currentCandidateIndex: 0,
 };
 
 export default function Home() {
@@ -18,50 +36,94 @@ export default function Home() {
 
   const [result, formAction, isPending] = useActionState(
     async (
-      previousState: RecommendResponse | null,
+      previousState: FormState,
       payload: FormData | "RESET",
-    ) => {
+    ): Promise<FormState> => {
+      // Handle reset
       if (payload === "RESET") {
         setErrorMessage(null);
-        return null;
+        return INITIAL_STATE;
       }
 
       setErrorMessage(null);
 
-      const fav = payload.get("favoriteMovie") as string;
-      const era = payload.get("eraPreference") as string;
-      const mood = payload.get("moodPreference") as string;
+      // View 1: handle group config (CONFIG -> QUESTIONS)
+      if (previousState.view === "CONFIG") {
+        const countRaw = payload.get("peopleCount") as string;
+        const timeLimit = (payload.get("timeLimit") as string) || "Unlimited";
+        const peopleCount = parseInt(countRaw, 10) || 1;
 
-      const userInput = `My favorite movie is "${fav}". Era preference: "${era}". Mood preference: "${mood}".`;
+        return {
+          ...previousState,
+          view: "QUESTIONS",
+          config: { peopleCount, timeLimit },
+          currentCandidateIndex: 0,
+          answers: [],
+        };
+      }
 
-      try {
-        const res = await fetch("/api/recommend", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userInput }),
-        });
+      // View 2: Handle individual answer (QUESTIONS)
+      if (previousState.view === "QUESTIONS") {
+        const currentAnswer: PersonAnswer = {
+          favoriteMovie: (payload.get("favoriteMovie") as string) || "",
+          eraPreference: (payload.get("eraPreference") as string) || "",
+          moodPreference: (payload.get("moodPreference") as string) || "",
+          strandedActor: (payload.get("strandedActor") as string) || "",
+        };
 
-        const data = await res.json();
+        const updatedAnswers = [...previousState.answers, currentAnswer];
+        const isLastPerson =
+          previousState.currentPersonIndex + 1 >=
+          previousState.config.peopleCount;
 
-        if (!res.ok) {
-          setErrorMessage(
-            data.message ||
-              data.error ||
-              "Something went wrong. Please try again.",
-          );
-          return null;
+        if (!isLastPerson) {
+          return {
+            ...previousState,
+            currentPersonIndex: previousState.currentPersonIndex + 1,
+            answers: updatedAnswers,
+          };
         }
 
-        return data as RecommendResponse;
-      } catch (err) {
-        console.error(err);
-        setErrorMessage(
-          "Network error or server is unreachable. Please try again later.",
-        );
-        return null;
+        // when last person finished, call group API
+        try {
+          const res = await fetch("/api/recommend/group", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              config: previousState.config,
+              answers: updatedAnswers,
+            }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            setErrorMessage(
+              data.message ||
+                data.error ||
+                "Something went wrong. Please try again.",
+            );
+            return previousState;
+          }
+
+          return {
+            ...previousState,
+            view: "RESULT",
+            answers: updatedAnswers,
+            result: data as RecommendResponse,
+            currentCandidateIndex: 0,
+          };
+        } catch (err) {
+          console.error(err);
+          setErrorMessage(
+            "Network error or server is unreachable. Please try again later.",
+          );
+          return previousState;
+        }
       }
+      return previousState;
     },
-    null,
+    INITIAL_STATE,
   );
 
   const handleReset = () => {
@@ -78,6 +140,28 @@ export default function Home() {
         {/* Loading View */}
         {isPending && (
           <LoadingUI>Searching the movie database for you...</LoadingUI>
+        )}
+
+        {/* VIEW 1: Start View - Config */}
+        {!isPending && view === "CONFIG" && (
+          <form
+            onSubmit={handleConfigSubmit}
+            className="w-full flex flex-col gap-5 mt-4"
+          >
+            <Question name="peopleCount" rows={1} placeholder="5">
+              How many people?
+            </Question>
+            <Question
+              name="timeLimit"
+              rows={1}
+              placeholder="2 hours 50 minutes"
+            >
+              How much time do you have?
+            </Question>
+            <Button type="submit" className="mt-3">
+              Start
+            </Button>
+          </form>
         )}
         {/* Status 1: Questions View */}
         {!isPending && !result && (
