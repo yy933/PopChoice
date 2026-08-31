@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useActionState, startTransition } from "react";
+import { useActionState, startTransition } from "react";
 import Header from "@/components/Header";
 import Question from "@/components/Question";
 import Button from "@/components/Button";
@@ -19,6 +19,7 @@ type FormState = {
   answers: PersonAnswer[];
   result: RecommendResponse | null;
   currentCandidateIndex: number; // control switching of "Next Movie"
+  candidateOffset: number;
   errorMessage: string | null;
 };
 
@@ -29,6 +30,7 @@ const INITIAL_STATE: FormState = {
   answers: [],
   result: null,
   currentCandidateIndex: 0,
+  candidateOffset: 0,
   errorMessage: null,
 };
 
@@ -37,22 +39,30 @@ const parseField = (formData: FormData, key: string, defaultValue = "") =>
   (formData.get(key) as string) || defaultValue;
 
 export default function Home() {
-  // const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
   const [state, formAction, isPending] = useActionState(
     async (
       previousState: FormState,
-      payload: FormData | "RESET",
+      payload: FormData | "RESET" | "NEXT_MOVIE",
     ): Promise<FormState> => {
       // Handle reset
       if (payload === "RESET") {
         return INITIAL_STATE;
       }
+      // Handle "Next Movie"
+      if (payload === "NEXT_MOVIE" && previousState.result) {
+        const allMoviesCount =
+          1 + (previousState.result.candidateMovies?.length || 0);
+        return {
+          ...previousState,
+          candidateOffset: (previousState.candidateOffset + 1) % allMoviesCount,
+        };
+      }
 
+      const formData = payload as FormData;
       // View 1: handle group config (CONFIG -> QUESTIONS)
       if (previousState.view === "CONFIG") {
-        const countRaw = parseField(payload, "peopleCount");
-        const timeLimit = parseField(payload, "timeLimit", "Unlimited");
+        const countRaw = parseField(formData, "peopleCount");
+        const timeLimit = parseField(formData, "timeLimit", "Unlimited");
         const peopleCount = parseInt(countRaw, 10) || 1;
 
         return {
@@ -68,10 +78,10 @@ export default function Home() {
       // View 2: Handle individual answer (QUESTIONS)
       if (previousState.view === "QUESTIONS") {
         const currentAnswer: PersonAnswer = {
-          favoriteMovie: parseField(payload, "favoriteMovie"),
-          eraPreference: parseField(payload, "eraPreference"),
-          moodPreference: parseField(payload, "moodPreference"),
-          strandedActor: parseField(payload, "strandedActor"),
+          favoriteMovie: parseField(formData, "favoriteMovie"),
+          eraPreference: parseField(formData, "eraPreference"),
+          moodPreference: parseField(formData, "moodPreference"),
+          strandedActor: parseField(formData, "strandedActor"),
         };
 
         const updatedAnswers = [...previousState.answers, currentAnswer];
@@ -132,17 +142,6 @@ export default function Home() {
     INITIAL_STATE,
   );
 
-  // Handle "Next Movie"
-  const [candidateOffset, setCandidateOffset] = useState(0);
-  const handleNextMovie = () => {
-    if (!state.result) return;
-    const allMovies = [
-      state.result.recommendation.movie,
-      ...(state.result.candidateMovies || []),
-    ];
-    setCandidateOffset((prev) => (prev + 1) % allMovies.length);
-  };
-
   // get current movie and recommend reason
   const allMovies = state.result
     ? [
@@ -151,12 +150,18 @@ export default function Home() {
       ]
     : [];
   const activeMovie =
-    allMovies[candidateOffset] || state.result?.recommendation.movie;
+    allMovies[state.candidateOffset] || state.result?.recommendation.movie;
 
+  // Event Handlers
   const handleReset = () => {
     startTransition(() => {
       formAction("RESET");
-      setCandidateOffset(0);
+    });
+  };
+
+  const handleNextMovie = () => {
+    startTransition(() => {
+      formAction("NEXT_MOVIE");
     });
   };
 
@@ -260,7 +265,7 @@ export default function Home() {
               className="text-white text-sm leading-relaxed mb-6 px-2 text-left"
               style={{ fontFamily: "var(--font-roboto-slab), serif" }}
             >
-              {candidateOffset === 0
+              {state.candidateOffset === 0
                 ? state.result?.recommendation.reason
                 : activeMovie.content}
             </p>
