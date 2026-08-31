@@ -19,6 +19,7 @@ type FormState = {
   answers: PersonAnswer[];
   result: RecommendResponse | null;
   currentCandidateIndex: number; // control switching of "Next Movie"
+  errorMessage: string | null;
 };
 
 const INITIAL_STATE: FormState = {
@@ -28,6 +29,7 @@ const INITIAL_STATE: FormState = {
   answers: [],
   result: null,
   currentCandidateIndex: 0,
+  errorMessage: null,
 };
 
 // helper for parsing form data
@@ -35,7 +37,7 @@ const parseField = (formData: FormData, key: string, defaultValue = "") =>
   (formData.get(key) as string) || defaultValue;
 
 export default function Home() {
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [state, formAction, isPending] = useActionState(
     async (
@@ -44,11 +46,8 @@ export default function Home() {
     ): Promise<FormState> => {
       // Handle reset
       if (payload === "RESET") {
-        setErrorMessage(null);
         return INITIAL_STATE;
       }
-
-      setErrorMessage(null);
 
       // View 1: handle group config (CONFIG -> QUESTIONS)
       if (previousState.view === "CONFIG") {
@@ -62,6 +61,7 @@ export default function Home() {
           config: { peopleCount, timeLimit },
           currentCandidateIndex: 0,
           answers: [],
+          errorMessage: null,
         };
       }
 
@@ -84,6 +84,7 @@ export default function Home() {
             ...previousState,
             currentPersonIndex: previousState.currentPersonIndex + 1,
             answers: updatedAnswers,
+            errorMessage: null,
           };
         }
 
@@ -102,12 +103,11 @@ export default function Home() {
           const data = await res.json();
 
           if (!res.ok) {
-            setErrorMessage(
-              data.message ||
-                data.error ||
-                "Something went wrong. Please try again.",
-            );
-            return previousState;
+            return {
+              ...previousState,
+              errorMessage:
+                data.message || data.error || "Something went wrong.",
+            };
           }
 
           return {
@@ -116,13 +116,15 @@ export default function Home() {
             answers: updatedAnswers,
             result: data as RecommendResponse,
             currentCandidateIndex: 0,
+            errorMessage: null,
           };
         } catch (err) {
           console.error(err);
-          setErrorMessage(
-            "Network error or server is unreachable. Please try again later.",
-          );
-          return previousState;
+          return {
+            ...previousState,
+            errorMessage:
+              "Network error or server is unreachable. Please try again later.",
+          };
         }
       }
       return previousState;
@@ -168,9 +170,9 @@ export default function Home() {
           <LoadingUI>Searching the movie database for you...</LoadingUI>
         )}
         {/* Error message */}
-        {errorMessage && !isPending && (
+        {state.errorMessage && !isPending && (
           <div className="w-full bg-red-500/10 border border-red-500/50 text-red-300 text-sm p-3 rounded-lg text-center mb-4">
-            {errorMessage}
+            {state.errorMessage}
           </div>
         )}
 
