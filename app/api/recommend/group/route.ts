@@ -60,6 +60,7 @@ export async function POST(req: Request) {
     }
 
     // 4. Map & Return Data
+    // format movie data
     const formatMovie = (movie: MatchedMovie): Movie => ({
       id: movie.id,
       title: movie.title,
@@ -68,6 +69,7 @@ export async function POST(req: Request) {
       similarity: movie.similarity,
     });
 
+    // return top 1 recs and candidate movie
     return NextResponse.json({
       recommendation: {
         movie: formatMovie(topMovie),

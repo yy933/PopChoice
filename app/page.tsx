@@ -6,7 +6,6 @@ import Question from "@/components/Question";
 import Button from "@/components/Button";
 import LoadingUI from "@/components/LoadingUI";
 import type { Movie, PersonAnswer, GroupConfig, ViewState } from "@/types";
-import { config } from "process";
 
 type Recommendation = { movie: Movie; reason: string; isLowMatch?: boolean };
 type RecommendResponse = {
@@ -95,6 +94,7 @@ export default function Home() {
             }),
           });
 
+          // data from API call
           const data = await res.json();
 
           if (!res.ok) {
@@ -126,26 +126,33 @@ export default function Home() {
     INITIAL_STATE,
   );
 
+  // Handle "Next Movie"
+  const [candidateOffset, setCandidateOffset] = useState(0);
+  const handleNextMovie = () => {
+    if (!state.result) return;
+    const allMovies = [
+      state.result.recommendation.movie,
+      ...(state.result.candidateMovies || []),
+    ];
+    setCandidateOffset((prev) => (prev + 1) % allMovies.length);
+  };
+
+  // get current movie and recommend reason
+  const allMovies = state.result
+    ? [
+        state.result.recommendation.movie,
+        ...(state.result.candidateMovies || []),
+      ]
+    : [];
+  const activeMovie =
+    allMovies[candidateOffset] || state.result?.recommendation.movie;
+
   const handleReset = () => {
     startTransition(() => {
       formAction("RESET");
+      setCandidateOffset(0);
     });
   };
-
-  // Handle "Next Movie"
-  const [candidateOffset, setCandidateOffset] = useState(0)
-  const handleNextMovie = () => {
-    if(!state.result)return
-    const allMovies = [state.result.recommendation.movie, ...(state.result.candidateMovies || [])]
-    setCandidateOffset((prev) => (prev + 1) % allMovies.length)
-  }
-
-  // get current movie and recommend reason
-  const allMovies = state.result ? 
-    [state.result.recommendation.movie,
-    ...(state.result.candidateMovies || [])] : []
-    const activeMovie = allMovies[candidateOffset] || state.result?.recommendation.movie
-  
 
   return (
     <main className="min-h-screen bg-[#030d2e] flex flex-col items-center justify-center p-4">
@@ -261,7 +268,7 @@ export default function Home() {
               <Button
                 onClick={handleReset}
                 type="button"
-                className="bg-gray-700 hover:bg-gray-600"
+                className="bg-gray-300 hover:bg-gray-400"
               >
                 Start Over
               </Button>
