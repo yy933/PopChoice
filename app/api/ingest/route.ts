@@ -12,7 +12,14 @@ function chunkArray<T>(array: T[], size: number): T[][] {
   return chunks;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  // authenticate auth token in header
+  const authHeader = request.headers.get("authorization");
+  const expectedToken = `Bearer ${process.env.INGEST_SECRET_KEY}`;
+
+  if (authHeader !== expectedToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const moviesToInsert = [];
     // Sending a batch of 5 Embedding requests at a time to prevent rate limiting
